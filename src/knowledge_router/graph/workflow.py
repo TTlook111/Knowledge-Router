@@ -3,9 +3,9 @@
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Send
 
-from knowledge_router.agents import github_agent, notion_agent, slack_agent
-from knowledge_router.models import router_llm
-from knowledge_router.schemas import AgentInput, ClassificationResult, RouterState
+from knowledge_router.core.models import router_llm
+from knowledge_router.core.schemas import AgentInput, ClassificationResult, RouterState
+from knowledge_router.services.agents import github_agent, notion_agent, slack_agent
 
 
 def classify_query(state: RouterState) -> dict:

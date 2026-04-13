@@ -2,7 +2,7 @@
 
 from langchain_community.chat_models.tongyi import ChatTongyi
 
-from knowledge_router.config import DASHSCOPE_API_KEY
+from knowledge_router.core.config import DASHSCOPE_API_KEY
 
 # 主模型：用于各子代理回答
 model = ChatTongyi(model="qwen3-max", api_key=DASHSCOPE_API_KEY)

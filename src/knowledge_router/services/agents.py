@@ -2,8 +2,8 @@
 
 from langchain.agents import create_agent
 
-from knowledge_router.models import model
-from knowledge_router.tools import (
+from knowledge_router.core.models import model
+from knowledge_router.services.tools import (
     get_page,
     get_thread,
     search_code,

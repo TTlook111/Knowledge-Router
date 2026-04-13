@@ -1,6 +1,6 @@
 """项目运行入口。"""
 
-from knowledge_router.workflow import workflow
+from knowledge_router.graph.workflow import workflow
 
 
 if __name__ == "__main__":
