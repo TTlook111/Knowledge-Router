@@ -15,9 +15,35 @@ def prepare_memory_context(state: RouterState) -> dict:
     history_queries = state.get("history_queries", [])
     if history_queries:
         recent = history_queries[-5:]
-        memory_context = "历史问题摘要（最近 5 条）：\n" + "\n".join(
-            f"- {item}" for item in recent
-        )
+        raw_history = "\n".join(f"- {item}" for item in recent)
+        try:
+            # 用模型把“历史问题 + 当前问题”压缩成可直接复用的上下文
+            summary_response = router_llm.invoke(
+                [
+                    {
+                        "role": "system",
+                        "content": (
+                            "你是会话记忆整理助手。请基于历史问题提炼与当前问题最相关的信息，"
+                            "输出简洁要点，避免复述无关内容。"
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": (
+                            f"当前问题：{state['query']}\n\n"
+                            f"最近历史问题：\n{raw_history}\n\n"
+                            "请输出：\n"
+                            "1) 与当前问题直接相关的背景\n"
+                            "2) 可能影响回答的约束/偏好\n"
+                            "3) 若无明显相关信息，请明确写“无有效历史线索”"
+                        ),
+                    },
+                ]
+            )
+            memory_context = f"历史记忆提炼：\n{summary_response.content}"
+        except Exception:
+            # 回退逻辑：模型异常时仍保证流程可用
+            memory_context = f"历史问题摘要（最近 5 条）：\n{raw_history}"
     else:
         memory_context = "无历史会话记忆。"
 
