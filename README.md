@@ -1,7 +1,7 @@
 # Knowledge-Router
 
 一个基于 LangGraph 的多智能体知识路由系统。  
-它会先理解用户问题，再把子问题并行分发给不同知识源代理（GitHub / Notion / Slack），最后聚合为结构化回答。
+它会先理解用户问题，再把子问题并行分发给不同知识源代理（GitHub / Notion / Slack / Web），最后聚合为结构化回答。
 
 ## 功能特性
 
@@ -45,7 +45,7 @@ TAVILY_API_KEY=your_tavily_api_key_here
 ```
 
 - `DASHSCOPE_API_KEY` 为必填，未配置时程序会在启动时报错。
-- `TAVILY_API_KEY` 用于联网搜索（Web 知识源），未配置时仅该能力不可用。
+- `TAVILY_API_KEY` 为必填（用于联网搜索 Web 知识源），未配置时程序会在启动时报错。
 
 ### 3. 运行示例
 
@@ -65,7 +65,7 @@ python -m knowledge_router.main
 
 1. `prepare_memory`：提炼最近会话历史，生成记忆上下文
 2. `classify`：判定问题应发送到哪些知识源
-3. `github/notion/slack`：并行执行子代理检索与回答
+3. `github/notion/slack/web`：并行执行子代理检索与回答
 4. `synthesize`：融合多源结果，输出最终答案
 
 其中 `results` 与 `history_queries` 使用 `operator.add` 在并行分支间自动聚合。

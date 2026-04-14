@@ -59,12 +59,6 @@ def get_thread(thread_id: str) -> str:
 def search_web(query: str, max_results: int = 5) -> str:
     """使用 Tavily 进行互联网搜索。"""
 
-    if not TAVILY_API_KEY:
-        return "未配置 TAVILY_API_KEY，无法执行联网检索。"
-
-    if TavilyClient is None:
-        return "未安装 tavily-python，无法执行联网检索。"
-
     try:
         client = TavilyClient(api_key=TAVILY_API_KEY)
         response = client.search(
