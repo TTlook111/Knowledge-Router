@@ -11,6 +11,7 @@ from knowledge_router.services.tools import (
     search_notion,
     search_prs,
     search_slack,
+    search_web,
 )
 
 github_agent = create_agent(
@@ -35,5 +36,14 @@ slack_agent = create_agent(
     tools=[search_slack, get_thread],
     system_prompt=(
         "你是 Slack 专家。请通过团队讨论与历史线程提炼经验、背景与可执行结论。"
+    ),
+)
+
+web_agent = create_agent(
+    model,
+    tools=[search_web],
+    system_prompt=(
+        "你是 Web 搜索专家。请基于互联网公开资料补充最新信息，"
+        "并优先给出可靠来源与可验证结论。"
     ),
 )

@@ -23,7 +23,7 @@ class AgentOutput(TypedDict):
 class Classification(TypedDict):
     """单次路由决策：给哪个代理发送什么查询。"""
 
-    source: Literal["github", "notion", "slack"]
+    source: Literal["github", "notion", "slack", "web"]
     query: str
 
 

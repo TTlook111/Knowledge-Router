@@ -1,7 +1,7 @@
 [project]
 name = "knowledge_router"
 version = "0.1.0"
-description = "Knowledge Router multi-agent system"
+description = "LangGraph-based multi-agent knowledge router for GitHub, Notion, Slack, and Web"
 requires-python = ">=3.13"
 dependencies = [
     "langchain",
@@ -11,7 +11,8 @@ dependencies = [
     "langchain-openai",
     "langchain-community",
     "dashscope",
-    "python-dotenv"
+    "python-dotenv",
+    "tavily-python"
 ]
 
 [build-system]

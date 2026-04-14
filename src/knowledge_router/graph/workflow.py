@@ -6,7 +6,7 @@ from langgraph.types import Send
 
 from knowledge_router.core.models import router_llm
 from knowledge_router.core.schemas import AgentInput, ClassificationResult, RouterState
-from knowledge_router.services.agents import github_agent, notion_agent, slack_agent
+from knowledge_router.services.agents import github_agent, notion_agent, slack_agent, web_agent
 
 
 def prepare_memory_context(state: RouterState) -> dict:
@@ -65,7 +65,8 @@ def classify_query(state: RouterState) -> dict:
                     "可用知识源：\n"
                     "- github：代码、API 参考、实现细节、Issue、Pull Request\n"
                     "- notion：内部文档、流程制度、团队知识库\n"
-                    "- slack：团队讨论、经验沉淀、近期上下文\n\n"
+                    "- slack：团队讨论、经验沉淀、近期上下文\n"
+                    "- web：互联网公开资料、官方文档、最新动态\n\n"
                     "只返回与问题相关的知识源。"
                 ),
             },
@@ -148,6 +149,22 @@ def query_slack(state: AgentInput) -> dict:
     return {"results": [{"source": "slack", "result": result["messages"][-1].content}]}
 
 
+def query_web(state: AgentInput) -> dict:
+    """调用 Web 子代理（Tavily 搜索）。"""
+
+    result = web_agent.invoke(
+        {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": f"{state['memory_context']}\n\n请回答：{state['query']}",
+                }
+            ]
+        }
+    )
+    return {"results": [{"source": "web", "result": result["messages"][-1].content}]}
+
+
 def synthesize_results(state: RouterState) -> dict:
     """综合多个知识源结果，输出最终答案。"""
 
@@ -182,13 +199,15 @@ workflow = (
     .add_node("github", query_github)
     .add_node("notion", query_notion)
     .add_node("slack", query_slack)
+    .add_node("web", query_web)
     .add_node("synthesize", synthesize_results)
     .add_edge(START, "prepare_memory")
     .add_edge("prepare_memory", "classify")
-    .add_conditional_edges("classify", route_to_agents, ["github", "notion", "slack"])
+    .add_conditional_edges("classify", route_to_agents, ["github", "notion", "slack", "web"])
     .add_edge("github", "synthesize")
     .add_edge("notion", "synthesize")
     .add_edge("slack", "synthesize")
+    .add_edge("web", "synthesize")
     .add_edge("synthesize", END)
     .compile(checkpointer=_checkpointer)
 )

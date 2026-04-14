@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY")
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 
 if not DASHSCOPE_API_KEY:
     raise ValueError("未检测到 DASHSCOPE_API_KEY，请先在 .env 文件中配置。")

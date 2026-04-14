@@ -1,6 +1,12 @@
 """示例工具集合：模拟 GitHub / Notion / Slack 检索能力。"""
 
 from langchain.tools import tool
+from knowledge_router.core.config import TAVILY_API_KEY
+
+try:
+    from tavily import TavilyClient
+except ImportError:  # pragma: no cover - 依赖缺失时做运行时提示
+    TavilyClient = None
 
 
 @tool
@@ -50,3 +56,38 @@ def get_thread(thread_id: str) -> str:
     """根据线程 ID 获取 Slack 线程内容。"""
 
     return f"线程 {thread_id} 讨论了 API Key 轮换的最佳实践。"
+
+
+@tool
+def search_web(query: str, max_results: int = 5) -> str:
+    """使用 Tavily 进行互联网搜索。"""
+
+    if not TAVILY_API_KEY:
+        return "未配置 TAVILY_API_KEY，无法执行联网检索。"
+
+    if TavilyClient is None:
+        return "未安装 tavily-python，无法执行联网检索。"
+
+    try:
+        client = TavilyClient(api_key=TAVILY_API_KEY)
+        response = client.search(
+            query=query,
+            max_results=max_results,
+            search_depth="advanced",
+        )
+    except Exception as exc:
+        return f"Tavily 搜索失败：{exc}"
+
+    results = response.get("results", [])
+    if not results:
+        return "联网检索完成，但未找到相关结果。"
+
+    lines = []
+    for idx, item in enumerate(results[:max_results], start=1):
+        title = item.get("title", "无标题")
+        url = item.get("url", "")
+        content = (item.get("content", "") or "").replace("\n", " ").strip()
+        snippet = content[:180]
+        lines.append(f"{idx}. {title}\n链接：{url}\n摘要：{snippet}")
+
+    return "Tavily 搜索结果：\n" + "\n\n".join(lines)
