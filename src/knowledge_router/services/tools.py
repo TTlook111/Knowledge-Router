@@ -2,11 +2,8 @@
 
 from langchain.tools import tool
 from knowledge_router.core.config import TAVILY_API_KEY
+from tavily import TavilyClient
 
-try:
-    from tavily import TavilyClient
-except ImportError:  # pragma: no cover - 依赖缺失时做运行时提示
-    TavilyClient = None
 
 
 @tool
