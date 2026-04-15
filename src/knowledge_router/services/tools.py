@@ -1,5 +1,7 @@
 """示例工具集合：模拟 GitHub / Notion / Slack 检索能力。"""
 
+import json
+
 from langchain.tools import tool
 from knowledge_router.core.config import TAVILY_API_KEY
 from tavily import TavilyClient
@@ -57,7 +59,7 @@ def get_thread(thread_id: str) -> str:
 
 @tool
 def search_web(query: str, max_results: int = 5) -> str:
-    """使用 Tavily 进行互联网搜索。"""
+    """使用 Tavily 进行互联网搜索，并返回字段化结果（title/url/summary）。"""
 
     try:
         client = TavilyClient(api_key=TAVILY_API_KEY)
@@ -71,14 +73,21 @@ def search_web(query: str, max_results: int = 5) -> str:
 
     results = response.get("results", [])
     if not results:
-        return "联网检索完成，但未找到相关结果。"
+        return json.dumps({"query": query, "results": []}, ensure_ascii=False, indent=2)
 
-    lines = []
+    structured_results = []
     for idx, item in enumerate(results[:max_results], start=1):
         title = item.get("title", "无标题")
         url = item.get("url", "")
         content = (item.get("content", "") or "").replace("\n", " ").strip()
         snippet = content[:180]
-        lines.append(f"{idx}. {title}\n链接：{url}\n摘要：{snippet}")
+        structured_results.append(
+            {
+                "rank": idx,
+                "title": title,
+                "url": url,
+                "summary": snippet,
+            }
+        )
 
-    return "Tavily 搜索结果：\n" + "\n\n".join(lines)
+    return json.dumps({"query": query, "results": structured_results}, ensure_ascii=False, indent=2)

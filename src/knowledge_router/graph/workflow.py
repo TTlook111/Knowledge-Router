@@ -79,8 +79,13 @@ def classify_query(state: RouterState) -> dict:
     return {"classifications": result.classifications}
 
 
-def route_to_agents(state: RouterState) -> list[Send]:
+def route_to_agents(state: RouterState) -> list[Send] | str:
     """根据分类结果并行分发到各子代理。"""
+
+    classifications = state.get("classifications", [])
+    if not classifications:
+        # 空分类兜底：直接进入综合节点返回默认答复
+        return "synthesize"
 
     # classifications 由 classify 节点给出，形如：
     # [{"source": "github", "query": "..."}, {"source": "notion", "query": "..."}]
@@ -97,7 +102,7 @@ def route_to_agents(state: RouterState) -> list[Send]:
             },
         )
         # 为每个分类结果生成一个并行任务
-        for c in state["classifications"]
+        for c in classifications
     ]
 
 
@@ -203,7 +208,7 @@ workflow = (
     .add_node("synthesize", synthesize_results)
     .add_edge(START, "prepare_memory")
     .add_edge("prepare_memory", "classify")
-    .add_conditional_edges("classify", route_to_agents, ["github", "notion", "slack", "web"])
+    .add_conditional_edges("classify", route_to_agents, ["github", "notion", "slack", "web", "synthesize"])
     .add_edge("github", "synthesize")
     .add_edge("notion", "synthesize")
     .add_edge("slack", "synthesize")
