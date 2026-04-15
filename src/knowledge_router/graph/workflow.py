@@ -177,6 +177,14 @@ def synthesize_results(state: RouterState) -> dict:
         return {"final_answer": "未从任何知识源检索到结果。"}
 
     formatted = [f"【{r['source'].title()}】\n{r['result']}" for r in state["results"]]
+    evidence_blocks = []
+    for idx, r in enumerate(state["results"], start=1):
+        source = r["source"]
+        content = (r.get("result", "") or "").replace("\n", " ").strip()
+        snippet = content[:220] if content else "无可用证据片段"
+        evidence_blocks.append(f"[{idx}] source={source} | snippet={snippet}")
+
+    evidence_text = "\n".join(evidence_blocks)
     synthesis_response = router_llm.invoke(
         [
             {
@@ -186,10 +194,20 @@ def synthesize_results(state: RouterState) -> dict:
                     "- 融合多源信息，避免重复\n"
                     "- 优先给出最相关、可执行的信息\n"
                     "- 若来源间有冲突，请明确指出\n"
-                    "- 表达简洁、结构清晰"
+                    "- 表达简洁、结构清晰\n"
+                    "- 回答必须包含“来源证据”小节，逐条列出证据片段并标注来源\n"
+                    "- 不允许只给结论不带证据"
                 ),
             },
-            {"role": "user", "content": "\n\n".join(formatted)},
+            {
+                "role": "user",
+                "content": (
+                    "检索原文：\n"
+                    f"{'\n\n'.join(formatted)}\n\n"
+                    "可引用证据片段（优先使用并可适当改写）：\n"
+                    f"{evidence_text}"
+                ),
+            },
         ]
     )
     return {"final_answer": synthesis_response.content}
